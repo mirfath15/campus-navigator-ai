@@ -59,8 +59,8 @@ const BUILDING_DEFS: (Building & { floors: RoomDef[][] })[] = [
   {
     id: "ak",
     name: "Abdul Kalam Block",
-    lat: REF.lat + 0.0006,
-    lng: REF.lng - 0.0004,
+    lat: REF.lat + 0.00013,
+    lng: REF.lng - 0.0009,
     hasLift: false,
     status: "unverified",
     floors: [
@@ -87,8 +87,8 @@ const BUILDING_DEFS: (Building & { floors: RoomDef[][] })[] = [
   {
     id: "kb",
     name: "Kirloskar Block",
-    lat: REF.lat - 0.0005,
-    lng: REF.lng - 0.0005,
+    lat: REF.lat + 0.00042,
+    lng: REF.lng + 0.00025,
     hasLift: false,
     status: "unverified",
     floors: [
@@ -114,8 +114,8 @@ const BUILDING_DEFS: (Building & { floors: RoomDef[][] })[] = [
   {
     id: "an",
     name: "Anna Auditorium",
-    lat: REF.lat + 0.00005,
-    lng: REF.lng + 0.0007,
+    lat: REF.lat + 0.00029,
+    lng: REF.lng - 0.00113,
     hasLift: true,
     status: "unverified",
     floors: [
