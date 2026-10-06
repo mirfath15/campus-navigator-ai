@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Accessibility, Mic, Navigation, Search, Bot, Construction, Satellite, Volume2, MapPin, Footprints, Clock } from "lucide-react";
-import { edges, nodes, rooms, floorName, startPoints, type Room } from "@/lib/campus/data";
+import { edges, nodes, floorName, startPoints, type Room } from "@/lib/campus/data";
 import { compare, route, ACCESSIBLE_UNAVAILABLE, type RouteResult } from "@/lib/campus/routing";
 import { describe, parse, searchRooms } from "@/lib/campus/assistant";
 
@@ -150,7 +150,7 @@ function StatusBadge({ status }: { status: string }) {
 function SearchTab(p: {
   query: string; setQuery: (s: string) => void; from: string; setFrom: (s: string) => void;
   accessible: boolean; setAccessible: (b: boolean) => void; onNavigate: (r: Room) => void; target: Room | null;
-  result: ReturnType<typeof useResultType>;
+  result: ResultT;
 }) {
   const list = searchRooms(p.query);
   return (
@@ -196,7 +196,6 @@ function SearchTab(p: {
 
 // type helper for the memoised result
 type ResultT = { error: string } | { route: RouteResult; cmp: ReturnType<typeof compare> } | null;
-function useResultType(): ResultT { return null; }
 
 function RoutePanel({ target, result }: { target: Room; result: NonNullable<ResultT> }) {
   if ("error" in result) {
@@ -382,6 +381,3 @@ function PositionTab(p: { mode: Mode; setMode: (m: Mode) => void; simOn: boolean
     </div>
   );
 }
-
-// keep rooms import used for future editor seeding
-void rooms;
