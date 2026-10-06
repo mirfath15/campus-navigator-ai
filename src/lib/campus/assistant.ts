@@ -39,7 +39,7 @@ export function parse(text: string): Intent {
   if (!matches.length) {
     return { type: "info", text: "I couldn't find that room in the floor plans. Try a room number like 864, or a name like Mechanical Lab 1." };
   }
-  if (wantsNav && matches.length === 1) return { type: "navigate", room: matches[0], accessible };
+  if (wantsNav && matches.length === 1) return { type: "navigate", room: matches[0]!, accessible };
   return { type: "search", matches };
 }
 

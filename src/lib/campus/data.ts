@@ -36,10 +36,10 @@ export interface Room {
   buildingName: string;
   floor: number;
   type: string;
-  dept?: string;
+  dept?: string | undefined;
   nodeId: string;
   status: Status;
-  note?: string;
+  note?: string | undefined;
 }
 
 export interface Building {
@@ -151,12 +151,18 @@ export const edges: Edge[] = [];
 export const rooms: Room[] = [];
 export const buildings: Building[] = BUILDING_DEFS.map(({ floors: _f, ...b }) => b);
 
+export function N(id: string): GNode {
+  const n = nodes[id];
+  if (!n) throw new Error(`Unknown node ${id}`);
+  return n;
+}
+
 function addNode(n: GNode) {
   nodes[n.id] = n;
   return n;
 }
 function addEdge(a: string, b: string, kind: EdgeKind, status: Status, label: string, fixedLength?: number) {
-  const length = fixedLength ?? Math.max(1, haversine(nodes[a], nodes[b]));
+  const length = fixedLength ?? Math.max(1, haversine(N(a), N(b)));
   edges.push({ id: `${a}~${b}`, a, b, kind, length, status, label });
 }
 

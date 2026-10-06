@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Accessibility, Mic, Navigation, Search, Bot, Construction, Satellite, Volume2, MapPin, Footprints, Clock } from "lucide-react";
-import { edges, nodes, floorName, startPoints, type Room } from "@/lib/campus/data";
+import { edges, nodes, N, floorName, startPoints, type Room } from "@/lib/campus/data";
 import { compare, route, ACCESSIBLE_UNAVAILABLE, type RouteResult } from "@/lib/campus/routing";
 import { describe, parse, searchRooms } from "@/lib/campus/assistant";
 
@@ -57,12 +57,12 @@ function Index() {
   useEffect(() => {
     if (!simOn || !activeRoute) return;
     stepRef.current = 0;
-    const pts = activeRoute.path.map((id) => nodes[id]);
+    const pts = activeRoute.path.map((id) => N(id));
     const id = setInterval(() => {
       const t = stepRef.current;
       const seg = Math.min(Math.floor(t), pts.length - 2);
       const f = Math.min(t - seg, 1);
-      const a = pts[seg], b = pts[seg + 1];
+      const a = pts[seg]!, b = pts[seg + 1]!;
       const truth = { lat: a.lat + (b.lat - a.lat) * f, lng: a.lng + (b.lng - a.lng) * f };
       const indoor = mode === "INDOOR" || !!b.building;
       const sd = indoor ? 0 : MODES[mode];

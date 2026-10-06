@@ -1,4 +1,4 @@
-import { edges, haversine, nodes, floorName, buildings, type Edge } from "./data";
+import { edges, haversine, N, floorName, buildings, type Edge } from "./data";
 
 export const ACCESSIBLE_UNAVAILABLE = "Accessible route is not available from the current verified campus data.";
 const WALK_SPEED = 1.3; // m/s
@@ -41,7 +41,7 @@ class MinHeap {
   push(v: [number, string]) {
     const a = this.a; a.push(v);
     let i = a.length - 1;
-    while (i > 0) { const p = (i - 1) >> 1; if (a[p][0] <= a[i][0]) break; [a[p], a[i]] = [a[i], a[p]]; i = p; }
+    while (i > 0) { const p = (i - 1) >> 1; if (a[p]![0] <= a[i]![0]) break; const t = a[p]!; a[p] = a[i]!; a[i] = t; i = p; }
   }
   pop() {
     const a = this.a; const top = a[0]; const last = a.pop()!;
@@ -49,9 +49,9 @@ class MinHeap {
       a[0] = last; let i = 0;
       for (;;) {
         const l = 2 * i + 1, r = l + 1; let m = i;
-        if (l < a.length && a[l][0] < a[m][0]) m = l;
-        if (r < a.length && a[r][0] < a[m][0]) m = r;
-        if (m === i) break; [a[m], a[i]] = [a[i], a[m]]; i = m;
+        if (l < a.length && a[l]![0] < a[m]![0]) m = l;
+        if (r < a.length && a[r]![0] < a[m]![0]) m = r;
+        if (m === i) break; const t = a[m]!; a[m] = a[i]!; a[i] = t; i = m;
       }
     }
     return top;
@@ -63,11 +63,11 @@ function search(from: string, to: string, opts: RouteOptions, useHeuristic: bool
   const g = new Map<string, number>([[from, 0]]);
   const came = new Map<string, { prev: string; edge: Edge }>();
   const done = new Set<string>();
-  const h = (id: string) => (useHeuristic ? haversine(nodes[id], nodes[to]) : 0); // f(n) = g(n) + h(n)
+  const h = (id: string) => (useHeuristic ? haversine(N(id), N(to)) : 0); // f(n) = g(n) + h(n)
   const open = new MinHeap();
   open.push([h(from), from]);
   while (open.size) {
-    const [, cur] = open.pop();
+    const [, cur] = open.pop()!;
     if (done.has(cur)) continue;
     done.add(cur);
     if (cur === to) break;
@@ -89,7 +89,7 @@ function search(from: string, to: string, opts: RouteOptions, useHeuristic: bool
 }
 
 function bearing(a: string, b: string) {
-  const A = nodes[a], B = nodes[b];
+  const A = N(a), B = N(b);
   return (Math.atan2(B.lng - A.lng, B.lat - A.lat) * 180) / Math.PI;
 }
 
@@ -99,35 +99,35 @@ function instructionsFor(path: string[], pathEdges: Edge[]): string[] {
   let i = 0;
   let lastBearing: number | null = null;
   while (i < pathEdges.length) {
-    const e = pathEdges[i];
+    const e = pathEdges[i]!;
     if (e.kind === "stairs" || e.kind === "lift") {
-      let j = i; while (j < pathEdges.length && pathEdges[j].kind === e.kind) j++;
-      const from = nodes[path[i]].floor ?? 0, to = nodes[path[j]].floor ?? 0;
+      let j = i; while (j < pathEdges.length && pathEdges[j]!.kind === e.kind) j++;
+      const from = N(path[i)]!.floor ?? 0, to = N(path[j)]!.floor ?? 0;
       out.push(`Take the ${e.kind === "lift" ? "lift" : "stairs"} ${to > from ? "up" : "down"} to the ${floorName(to).toLowerCase()}.`);
       i = j; lastBearing = null; continue;
     }
     if (e.kind === "entrance") {
-      const n = nodes[path[i + 1]];
-      const entering = nodes[path[i]].kind === "entrance";
-      out.push(entering ? `Enter ${bName(n.building)} through the entrance (ground floor).` : `Exit ${bName(nodes[path[i]].building)} through the entrance.`);
+      const n = N(path[i + 1)]!;
+      const entering = N(path[i)]!.kind === "entrance";
+      out.push(entering ? `Enter ${bName(n.building)} through the entrance (ground floor).` : `Exit ${bName(N(path[i)]!.building)} through the entrance.`);
       i++; lastBearing = null; continue;
     }
     if (e.kind === "door") {
-      const n = nodes[path[i + 1]];
+      const n = N(path[i + 1)]!;
       if (n.kind === "room") out.push(`Arrive at ${n.label} on the ${floorName(n.floor ?? 0).toLowerCase()}.`);
       else out.push("Step out of the room into the corridor.");
       i++; lastBearing = null; continue;
     }
     // walking segments (outdoor or corridor) — merge same-kind runs
     let j = i; let dist = 0;
-    while (j < pathEdges.length && pathEdges[j].kind === e.kind) { dist += pathEdges[j].length; j++; }
-    const br = bearing(path[i], path[j]);
+    while (j < pathEdges.length && pathEdges[j]!.kind === e.kind) { dist += pathEdges[j]!.length; j++; }
+    const br = bearing(path[i]!, path[j]!);
     let turn = "";
     if (lastBearing !== null) {
       const d = ((br - lastBearing + 540) % 360) - 180;
       turn = d > 35 ? "Turn right and " : d < -35 ? "Turn left and " : "Continue and ";
     }
-    const target = nodes[path[j]];
+    const target = N(path[j)]!;
     const verb = turn ? turn + "walk" : "Walk";
     out.push(e.kind === "outdoor"
       ? `${verb} ${Math.round(dist)} m along the campus path toward ${target.label}.`

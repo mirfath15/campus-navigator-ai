@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type * as Leaflet from "leaflet";
-import { buildings, edges, nodes, REF } from "@/lib/campus/data";
+import { buildings, edges, N, REF } from "@/lib/campus/data";
 
 interface Props {
   path: string[] | null;
@@ -32,14 +32,14 @@ export function CampusMap({ path, closed, position }: Props) {
     for (const e of edges) {
       const isClosed = closed.has(e.id) || closed.has(e.a) || closed.has(e.b);
       if (!isClosed || e.kind === "door") continue;
-      l.polyline([[nodes[e.a].lat, nodes[e.a].lng], [nodes[e.b].lat, nodes[e.b].lng]], { color: danger, weight: 6, dashArray: "4 6" }).addTo(g);
+      l.polyline([[N(e.a).lat, N(e.a).lng], [N(e.b).lat, N(e.b).lng]], { color: danger, weight: 6, dashArray: "4 6" }).addTo(g);
     }
     if (path && path.length) {
-      const pts = path.map((id) => [nodes[id].lat, nodes[id].lng] as [number, number]);
+      const pts = path.map((id) => [N(id).lat, N(id).lng] as [number, number]);
       l.polyline(pts, { color: routeColor, weight: 9, opacity: 0.25 }).addTo(g);
       l.polyline(pts, { color: routeColor, weight: 4 }).addTo(g);
-      l.circleMarker(pts[0], { radius: 8, color: routeColor, fillColor: cssVar("--background"), fillOpacity: 1, weight: 3 }).addTo(g).bindTooltip("Start");
-      l.circleMarker(pts[pts.length - 1], { radius: 9, color: routeColor, fillColor: routeColor, fillOpacity: 1 }).addTo(g).bindTooltip(nodes[path[path.length - 1]].label, { permanent: true, direction: "top" });
+      l.circleMarker(pts[0]!, { radius: 8, color: routeColor, fillColor: cssVar("--background"), fillOpacity: 1, weight: 3 }).addTo(g).bindTooltip("Start");
+      l.circleMarker(pts[pts.length - 1]!, { radius: 9, color: routeColor, fillColor: routeColor, fillOpacity: 1 }).addTo(g).bindTooltip(N(path[path.length - 1)].label, { permanent: true, direction: "top" });
       m.fitBounds(l.latLngBounds(pts), { padding: [60, 60], maxZoom: 19 });
     }
   }
@@ -66,7 +66,7 @@ export function CampusMap({ path, closed, position }: Props) {
       const muted = cssVar("--muted-foreground");
       for (const e of edges) {
         if (e.kind !== "outdoor") continue;
-        l.polyline([[nodes[e.a].lat, nodes[e.a].lng], [nodes[e.b].lat, nodes[e.b].lng]], { color: muted, weight: 3, dashArray: "2 6" }).addTo(m);
+        l.polyline([[N(e.a).lat, N(e.a).lng], [N(e.b).lat, N(e.b).lng]], { color: muted, weight: 3, dashArray: "2 6" }).addTo(m);
       }
       for (const b of buildings) {
         const d = 0.00019;
@@ -74,7 +74,7 @@ export function CampusMap({ path, closed, position }: Props) {
           .addTo(m)
           .bindTooltip(`${b.name} · approximate placement`, { permanent: true, direction: "center", className: "building-label" });
       }
-      l.circleMarker([nodes.gate.lat, nodes.gate.lng], { radius: 6, color: cssVar("--primary"), fillOpacity: 1 }).addTo(m).bindTooltip("Main Gate");
+      l.circleMarker([N("gate").lat, N("gate").lng], { radius: 6, color: cssVar("--primary"), fillOpacity: 1 }).addTo(m).bindTooltip("Main Gate");
       dyn.current = l.layerGroup().addTo(m);
       pos.current = l.layerGroup().addTo(m);
       map.current = m;
