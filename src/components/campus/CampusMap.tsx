@@ -39,7 +39,7 @@ export function CampusMap({ path, closed, position }: Props) {
       l.polyline(pts, { color: routeColor, weight: 9, opacity: 0.25 }).addTo(g);
       l.polyline(pts, { color: routeColor, weight: 4 }).addTo(g);
       l.circleMarker(pts[0]!, { radius: 8, color: routeColor, fillColor: cssVar("--background"), fillOpacity: 1, weight: 3 }).addTo(g).bindTooltip("Start");
-      l.circleMarker(pts[pts.length - 1]!, { radius: 9, color: routeColor, fillColor: routeColor, fillOpacity: 1 }).addTo(g).bindTooltip(N(path[path.length - 1)].label, { permanent: true, direction: "top" });
+      l.circleMarker(pts[pts.length - 1]!, { radius: 9, color: routeColor, fillColor: routeColor, fillOpacity: 1 }).addTo(g).bindTooltip(N(path[path.length - 1]!).label, { permanent: true, direction: "top" });
       m.fitBounds(l.latLngBounds(pts), { padding: [60, 60], maxZoom: 19 });
     }
   }

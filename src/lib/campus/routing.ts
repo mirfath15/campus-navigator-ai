@@ -102,18 +102,18 @@ function instructionsFor(path: string[], pathEdges: Edge[]): string[] {
     const e = pathEdges[i]!;
     if (e.kind === "stairs" || e.kind === "lift") {
       let j = i; while (j < pathEdges.length && pathEdges[j]!.kind === e.kind) j++;
-      const from = N(path[i)]!.floor ?? 0, to = N(path[j)]!.floor ?? 0;
+      const from = N(path[i]!).floor ?? 0, to = N(path[j]!).floor ?? 0;
       out.push(`Take the ${e.kind === "lift" ? "lift" : "stairs"} ${to > from ? "up" : "down"} to the ${floorName(to).toLowerCase()}.`);
       i = j; lastBearing = null; continue;
     }
     if (e.kind === "entrance") {
-      const n = N(path[i + 1)]!;
-      const entering = N(path[i)]!.kind === "entrance";
-      out.push(entering ? `Enter ${bName(n.building)} through the entrance (ground floor).` : `Exit ${bName(N(path[i)]!.building)} through the entrance.`);
+      const n = N(path[i + 1]!);
+      const entering = N(path[i]!).kind === "entrance";
+      out.push(entering ? `Enter ${bName(n.building)} through the entrance (ground floor).` : `Exit ${bName(N(path[i]!).building)} through the entrance.`);
       i++; lastBearing = null; continue;
     }
     if (e.kind === "door") {
-      const n = N(path[i + 1)]!;
+      const n = N(path[i + 1]!);
       if (n.kind === "room") out.push(`Arrive at ${n.label} on the ${floorName(n.floor ?? 0).toLowerCase()}.`);
       else out.push("Step out of the room into the corridor.");
       i++; lastBearing = null; continue;
@@ -127,7 +127,7 @@ function instructionsFor(path: string[], pathEdges: Edge[]): string[] {
       const d = ((br - lastBearing + 540) % 360) - 180;
       turn = d > 35 ? "Turn right and " : d < -35 ? "Turn left and " : "Continue and ";
     }
-    const target = N(path[j)]!;
+    const target = N(path[j]!);
     const verb = turn ? turn + "walk" : "Walk";
     out.push(e.kind === "outdoor"
       ? `${verb} ${Math.round(dist)} m along the campus path toward ${target.label}.`
