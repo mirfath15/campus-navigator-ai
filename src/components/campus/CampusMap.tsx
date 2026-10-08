@@ -6,21 +6,23 @@ interface Props {
   path: string[] | null;
   closed: Set<string>;
   position: { lat: number; lng: number; accuracy: number } | null;
+  realGpsPosition?: { lat: number; lng: number; accuracy: number } | null;
 }
 
 function cssVar(name: string) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-export function CampusMap({ path, closed, position }: Props) {
+export function CampusMap({ path, closed, position, realGpsPosition }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const L = useRef<typeof Leaflet | null>(null);
   const map = useRef<Leaflet.Map | null>(null);
   const dyn = useRef<Leaflet.LayerGroup | null>(null);
   const pos = useRef<Leaflet.LayerGroup | null>(null);
+  const gps = useRef<Leaflet.LayerGroup | null>(null);
   const ready = useRef(false);
-  const latest = useRef({ path, closed, position });
-  latest.current = { path, closed, position };
+  const latest = useRef({ path, closed, position, realGpsPosition });
+  latest.current = { path, closed, position, realGpsPosition };
 
   function drawDynamic() {
     const l = L.current, m = map.current, g = dyn.current;
@@ -55,6 +57,33 @@ export function CampusMap({ path, closed, position }: Props) {
     l.circleMarker([p.lat, p.lng], { radius: 7, color: cssVar("--foreground"), fillColor: c, fillOpacity: 1, weight: 2 }).addTo(g);
   }
 
+  function drawRealGps() {
+    const l = L.current, g = gps.current;
+    if (!l || !g) return;
+    g.clearLayers();
+    const gp = latest.current.realGpsPosition;
+    if (!gp) return;
+    // Blue indicator for real hardware GPS - distinct from simulated positioning
+    const gpsBlue = "#2563eb";
+    l.circle([gp.lat, gp.lng], {
+      radius: Math.max(gp.accuracy, 3),
+      color: gpsBlue,
+      fillColor: gpsBlue,
+      fillOpacity: 0.15,
+      weight: 1.5,
+      dashArray: "3 4",
+    }).addTo(g);
+    l.circleMarker([gp.lat, gp.lng], {
+      radius: 8,
+      color: "#ffffff",
+      fillColor: gpsBlue,
+      fillOpacity: 1,
+      weight: 2.5,
+    })
+      .addTo(g)
+      .bindTooltip(`📍 Real Device GPS (±${Math.round(gp.accuracy)}m)`, { permanent: false, direction: "top" });
+  }
+
   useEffect(() => {
     let cancelled = false;
     import("leaflet").then((mod) => {
@@ -77,10 +106,12 @@ export function CampusMap({ path, closed, position }: Props) {
       l.circleMarker([N("gate").lat, N("gate").lng], { radius: 6, color: cssVar("--primary"), fillOpacity: 1 }).addTo(m).bindTooltip("Main Gate");
       dyn.current = l.layerGroup().addTo(m);
       pos.current = l.layerGroup().addTo(m);
+      gps.current = l.layerGroup().addTo(m);
       map.current = m;
       ready.current = true;
       drawDynamic();
       drawPosition();
+      drawRealGps();
     });
     return () => {
       cancelled = true;
@@ -91,6 +122,8 @@ export function CampusMap({ path, closed, position }: Props) {
 
   useEffect(() => { if (ready.current) drawDynamic(); }, [path, closed]);
   useEffect(() => { if (ready.current) drawPosition(); }, [position]);
+  useEffect(() => { if (ready.current) drawRealGps(); }, [realGpsPosition]);
 
   return <div ref={el} className="h-full w-full" />;
 }
+

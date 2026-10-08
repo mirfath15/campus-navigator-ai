@@ -53,7 +53,7 @@ export interface Building {
 
 export const REF = { lat: 13.148828, lng: 80.192063 };
 
-type RoomDef = [code: string, name: string, type: string, dept?: string];
+export type RoomDef = [code: string, name: string, type: string, dept?: string, status?: Status, note?: string];
 
 const BUILDING_DEFS: (Building & { floors: RoomDef[][] })[] = [
   {
@@ -135,6 +135,94 @@ const BUILDING_DEFS: (Building & { floors: RoomDef[][] })[] = [
       ],
     ],
   },
+  {
+    id: "fcb",
+    name: "Founder Chairman Block",
+    lat: REF.lat - 0.00023,
+    lng: REF.lng + 0.00004,
+    hasLift: false,
+    status: "unverified",
+    floors: [
+      [
+        ["GR", "Girls Restroom", "restroom"],
+        ["401", "Civil Lab 1", "lab", "Civil"],
+        ["402", "Civil Lab 2", "lab", "Civil"],
+        ["403", "Civil Lab 3", "lab", "Civil"],
+        ["503", "Civil IV Year - C Classroom", "classroom", "Civil"],
+        ["MSR", "Mathematics Department Staff Room", "staffroom", "Mathematics"],
+      ],
+      [
+        ["BR", "Boys Restroom", "restroom"],
+        ["203", "CSE-C Classroom", "classroom", "CSE"],
+        ["201", "CSE-A Classroom", "classroom", "CSE"],
+      ],
+      [
+        ["501", "Civil IV Year-A Classroom", "classroom", "Civil"],
+        ["502", "Civil IV Year-B Classroom", "classroom", "Civil"],
+        ["202", "CSE-B Classroom", "classroom", "CSE"],
+      ],
+      [
+        ["GR", "Girls Restroom", "restroom"],
+        ["CSR", "Chemistry Department Staff Room", "staffroom", "Chemistry"],
+        ["301", "IT-A Classroom", "classroom", "IT"],
+        ["302", "IT-B Classroom", "classroom", "IT"],
+      ],
+    ],
+  },
+  {
+    id: "vb",
+    name: "Visvesvaraya Block",
+    lat: REF.lat - 0.00063,
+    lng: REF.lng + 0.00034,
+    hasLift: false,
+    status: "unverified",
+    floors: [
+      [
+        ["601", "CSE III Year-A Classroom", "classroom", "CSE"],
+        ["602", "CSE III Year-B Classroom", "classroom", "CSE"],
+        ["CSESR", "CSE Department Staff Room", "staffroom", "CSE"],
+        ["701", "CSE II Year-A Classroom", "classroom", "CSE"],
+        ["702", "CSE II Year-B Classroom", "classroom", "CSE"],
+        ["AIDSSR", "AI-DS Department Staff Room", "staffroom", "AI & DS"],
+        ["BR", "Boys Restroom", "restroom"],
+      ],
+      [
+        ["801", "Mechanical 1st Year 'A'", "classroom", "Mechanical"],
+        ["802", "Mechanical 1st Year 'B'", "classroom", "Mechanical"],
+        ["803", "Mechanical 1st Year 'C'", "classroom", "Mechanical"],
+        ["GR", "Girls Restroom", "restroom"],
+        ["DSR", "Mechanical Department Staff Room", "staffroom", "Mechanical"],
+        ["901", "EEE 2nd Year 'A'", "classroom", "EEE"],
+        ["902", "EEE 2nd Year 'B'", "classroom", "EEE"],
+        ["903", "EEE 2nd Year 'C'", "classroom", "EEE"],
+        ["904", "EEE 2nd Year 'D'", "classroom", "EEE"],
+      ],
+      [
+        ["BR", "Boys Restroom", "restroom"],
+        ["821", "ECE 2nd Year 'A'", "classroom", "ECE"],
+        ["822", "ECE 2nd Year 'B'", "classroom", "ECE"],
+        ["411", "Civil 1st Year 'A'", "classroom", "Civil"],
+        ["412", "Civil 1st Year 'B'", "classroom", "Civil"],
+        ["413", "Civil 1st Year 'C'", "classroom", "Civil"],
+        ["101", "AI-DS 1st Year 'A'", "classroom", "AI & DS"],
+        ["102", "AI-DS 1st Year 'B'", "classroom", "AI & DS"],
+      ],
+      [
+        ["121", "AI-DS 2nd Year 'A'", "classroom", "AI & DS"],
+        ["DSR", "AI-DS Department Staff Room", "staffroom", "AI & DS"],
+        ["122", "AI-DS 2nd Year 'B'", "classroom", "AI & DS"],
+        ["GR", "Girls Restroom", "restroom"],
+        ["911", "EEE 1st Year 'A'", "classroom", "EEE"],
+        ["912", "EEE 1st Year 'B'", "classroom", "EEE"],
+        ["913", "EEE 1st Year 'C'", "classroom", "EEE"],
+        ["914", "EEE 1st Year 'D'", "classroom", "EEE", "requires_confirmation", "Plan originally wrote duplicate 913; corrected to 914 per spec."],
+      ],
+      [
+        ["LB1", "Communication Lab 1", "lab", "ECE"],
+        ["LB2", "Communication Lab 2", "lab", "ECE"],
+      ],
+    ],
+  },
 ];
 
 const R = 6371000;
@@ -175,6 +263,8 @@ addNode({ id: "gate", label: "Main Gate", kind: "gate", lat: REF.lat - 0.0011, l
 addNode({ id: "hub", label: "Central Junction", kind: "junction", lat: REF.lat, lng: REF.lng, status: "unverified" });
 addEdge("gate", "hub", "outdoor", "unverified", "Main road");
 
+const usedRids = new Set<string>();
+
 for (const b of BUILDING_DEFS) {
   const junction = addNode({
     id: `${b.id}-j`, label: `${b.name} approach`, kind: "junction",
@@ -194,24 +284,34 @@ for (const b of BUILDING_DEFS) {
       lat: b.lat, lng: b.lng - 3 * STEP, status: "requires_confirmation",
     });
     let prev = stairs.id;
-    floorRooms.forEach(([code, name, type, dept], i) => {
+    floorRooms.forEach(([code, name, type, dept, customStatus, customNote], i) => {
       const c = addNode({
         id: `${b.id}-f${f}-c${i}`, label: `${b.name} floor ${f} corridor`, kind: "corridor", building: b.id, floor: f,
         lat: b.lat, lng: b.lng + (i - 2.5) * STEP, status: "requires_confirmation",
       });
       addEdge(prev, c.id, "corridor", "requires_confirmation", `${b.name} floor ${f} corridor`);
       prev = c.id;
-      const rid = `${b.id}-${code.replace(/\s+/g, "_")}`;
+
+      const baseRid = `${b.id}-f${f}-${code.replace(/\s+/g, "_")}`;
+      let rid = baseRid;
+      let dupIdx = 2;
+      while (usedRids.has(rid)) {
+        rid = `${baseRid}-${dupIdx++}`;
+      }
+      usedRids.add(rid);
+
       const r = addNode({
         id: `${rid}-door`, label: `${code} — ${name}`, kind: "room", building: b.id, floor: f,
         lat: b.lat + (i % 2 ? 1 : -1) * 0.00003, lng: c.lng, status: "requires_confirmation",
       });
       addEdge(c.id, r.id, "door", "requires_confirmation", `Door of ${code}`);
-      const dup = b.id === "kb" && code === "255";
+      const isKbDup = b.id === "kb" && code === "255";
+      const status: Status = customStatus ?? (isKbDup ? "requires_confirmation" : "unverified");
+      const note = customNote ?? (isKbDup ? "Plan gives room 255 the same name as room 254 — needs confirmation." : undefined);
       rooms.push({
         id: rid, code, name, building: b.id, buildingName: b.name, floor: f, type, dept, nodeId: r.id,
-        status: dup ? "requires_confirmation" : "unverified",
-        note: dup ? "Plan gives room 255 the same name as room 254 — needs confirmation." : undefined,
+        status,
+        note,
       });
     });
     if (b.hasLift) {
@@ -230,7 +330,17 @@ for (const b of BUILDING_DEFS) {
 }
 
 export function floorName(f: number) {
-  return f === 0 ? "Ground floor" : f === 1 ? "First floor" : f === 2 ? "Second floor" : `Floor ${f}`;
+  return f === 0
+    ? "Ground floor"
+    : f === 1
+      ? "First floor"
+      : f === 2
+        ? "Second floor"
+        : f === 3
+          ? "Third floor"
+          : f === 4
+            ? "Fourth floor"
+            : `Floor ${f}`;
 }
 
 export const startPoints = [

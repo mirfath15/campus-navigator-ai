@@ -1,52 +1,30 @@
 # Campus Navigator AI
 
-I built Campus Navigator AI for VEC. You can search the rooms from your floor plans for Abdul Kalam Block, Kirloskar Block and Anna Auditorium. Tap Navigate here to get a route on the campus map with step-by-step directions, the distance and the walking time.
+I built Campus Navigator AI for Velammal Engineering College (VEC), Chennai. You can search rooms from the floor plans for Abdul Kalam Block, Kirloskar Block, Anna Auditorium, Founder Chairman Block (FCB), and Visvesvaraya Block. Tap Navigate here to get a route on the campus map with step-by-step directions, distance, and walking time.
 
 What you can do:
 
-- Directions: each route also shows a speed comparison between two routing methods (A* and Dijkstra).
+- **Directions & Routing**: Each route shows step-by-step walking directions and speed comparison between two routing methods (A* and Dijkstra).
+- **Indoor Data**: Full multi-floor networks for 5 blocks (Abdul Kalam Block, Kirloskar Block, Anna Auditorium, Founder Chairman Block, and Visvesvaraya Block) including classrooms, labs, staffrooms, restrooms, corridors, entrances, and stairs.
+- **Hands-Free Navigation**: Dedicated Start Navigation and Stop Navigation controls, spoken turn-by-turn audio directions via browser SpeechSynthesis, voice mute/unmute, repeat prompts, step-by-step advancement, and live hardware device position tracking when location permission is granted.
+- **WhatsApp Location & Route Sharing**: Share real device GPS coordinates, selected campus destinations, or walking routes directly via WhatsApp with Google Maps/OpenStreetMap links and step-by-step directions. Tapping opens WhatsApp with a prepared message for manual sending (no automated messaging or Business API).
+- **Accessible Mode**: Avoids stairs. Uses verified lifts (Anna Auditorium lift). When no step-free route exists, returns the standard spec message.
+- **Voice Assistant**: Type or speak questions like "Where is room 401?" or "Take me to Civil Lab 1 without stairs", with spoken answers and direct "Start navigation" controls.
+- **Closures Tab**: Close entrances, stairs, lifts or corridors dynamically, and routes avoid them right away.
+- **Position Simulator**: A simulated positioning walk along routes with FIXED, FLOAT, SINGLE, and INDOOR modes. Clearly labeled as a simulation preview (not real RTK or GPS).
+- **"How it works" Page**: Problem → Solution → Feature → Technology table.
 
-- Accessible mode: avoids stairs. Only the Anna Auditorium lift is used, because it's the only lift on your plans. When no step-free route exists, you get the exact message from your spec.
+Data status & source files:
 
-- Assistant tab: type or speak questions like "Take me to room 864 without stairs". Answers can be read aloud.
-
-- Closures tab: close entrances, stairs, lifts or corridors, and routes avoid them right away.
-
-- Position tab: a simulated positioning walk with FIXED, FLOAT, SINGLE and INDOOR modes. It's clearly labelled as a simulation, not real RTK.
-
-- "How it works" page: shows the Problem → Solution → Feature → Technology table.
-
-Placeholder locations:
-
-- I placed the buildings roughly where the map shows them.
-
-- The room layouts inside each building and the entrance spots are rough guesses, and the app marks them as needing confirmation.
-
-- Room 255 is also flagged, because your plan names it the same as room 254.
+- Building footprints and indoor room layouts are approximate placements marked as `requires_confirmation` or `unverified` pending a future visual floor-plan editor with CAD/survey data.
+- Room 255 (Kirloskar Block) and Room 914 (Visvesvaraya Block) are preserved with status `requires_confirmation` due to handwritten plan duplicates.
+- Source files still needed: Additional campus buildings (Bill Gates Block, Ratan Tata Block, Murugan Temple, College Canteen, Hostels, Sports Complex) currently only have outdoor coordinates; indoor floor plan source files are still needed to map their rooms.
 
 Not built yet:
 
-- Your requested setup: the spec asks for Python and FastAPI, which this platform doesn't support, so everything here runs in the browser.
+- Saved database storage: Runs standalone client-side; custom closures reset upon full page reload.
+- Visual floor-plan admin editor: For uploading architectural CAD blueprints and placing exact door coordinates.
 
-- Saved data: nothing is stored online yet, so any closures you set reset when the page reloads.
-
-- Floor-plan editor: not built, so the real room and entrance positions can't be entered yet.
-
-- Smarter assistant: it matches simple phrases for now and doesn't use AI yet.
-
-- Visvesvaraya Block: left out, because your notes give only two room numbers (913 and 914) and no floors.
-
-Should I add online storage and the floor-plan editor next, so you can drag rooms and entrances into their real positions?refer this link  for a template" @project:516f201e-ff56-4b0c-a8e5-9f9d1650b3ab:"Build Beautifully"  "
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/5af4f40f-2ab5-4973-b4c8-b8c707f28481).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
