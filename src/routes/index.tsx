@@ -50,7 +50,7 @@ export const Route = createFileRoute("/")({
 });
 
 type Tab = "search" | "assistant" | "closures" | "position";
-type Msg = { from: "you" | "bot"; text: string; room?: Room };
+type Msg = { from: "you" | "bot"; text: string; room?: Room; canStartNav?: boolean };
 
 const MODES = { FIXED: 0.02, FLOAT: 0.5, SINGLE: 3.0, INDOOR: 0 } as const;
 type Mode = keyof typeof MODES;
@@ -139,6 +139,7 @@ function Index() {
   };
 
   const navigateTo = (r: Room, acc?: boolean) => {
+    stopNavigation();
     setTarget(r);
     if (acc !== undefined) setAccessible(acc);
     nav.stopNavigation();
@@ -443,6 +444,8 @@ function SearchTab(p: {
   onStopNav: () => void;
 }) {
   const list = searchRooms(p.query);
+  const activeRoute = p.result && "route" in p.result ? p.result.route : null;
+
   return (
     <div className="space-y-4">
       <div className="relative">
@@ -664,10 +667,174 @@ function RoutePanel({
   );
 }
 
-function speak(text: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+function NavigationHUD(p: {
+  target: Room;
+  route: RouteResult;
+  currentStep: number;
+  totalSteps: number;
+  onNext: () => void;
+  onPrev: () => void;
+  onStop: () => void;
+  onRepeat: () => void;
+  voiceMuted: boolean;
+  onToggleMute: () => void;
+  trackingStatus: "idle" | "tracking" | "denied" | "unavailable" | "unsupported";
+  accuracy?: number;
+  simOn: boolean;
+  onToggleSim: () => void;
+  onShareRoute: () => void;
+}) {
+  const currentInstruction = p.route.instructions[p.currentStep] ?? "Arrive at destination.";
+  const nextInstruction = p.route.instructions[p.currentStep + 1];
+  const isLast = p.currentStep >= p.totalSteps - 1;
+
+  return (
+    <div className="space-y-3 rounded-2xl bg-primary p-4 text-primary-foreground shadow-panel">
+      {/* Top Bar with Step index, status & Stop Button */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 items-center rounded-full bg-card px-2.5 text-xs font-bold text-card-foreground">
+            Step {p.currentStep + 1} of {p.totalSteps}
+          </span>
+          {p.simOn ? (
+            <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-200">
+              🎮 Simulated Walk
+            </span>
+          ) : p.trackingStatus === "tracking" ? (
+            <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-200">
+              📍 GPS ±{Math.round(p.accuracy ?? 5)}m
+            </span>
+          ) : p.trackingStatus === "denied" ? (
+            <span className="rounded-full bg-card/20 px-2 py-0.5 text-[10px] font-medium text-primary-foreground/80">
+              Manual step
+            </span>
+          ) : (
+            <span className="rounded-full bg-card/20 px-2 py-0.5 text-[10px] font-medium text-primary-foreground/80">
+              Indoor/Manual
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={p.onStop}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-destructive px-2.5 py-1 text-xs font-bold text-destructive-foreground hover:opacity-90 transition-colors shadow"
+          title="Stop active hands-free navigation"
+          aria-label="Stop navigation"
+        >
+          <Square className="h-3 w-3 fill-current" /> Stop
+        </button>
+      </div>
+
+      {/* Target heading */}
+      <div>
+        <p className="text-[11px] uppercase tracking-wider opacity-80">Guiding you to</p>
+        <h2 className="text-base font-bold leading-tight">
+          {p.target.code} · {p.target.name}
+        </h2>
+        <p className="text-xs opacity-90">
+          {p.target.buildingName} · {floorName(p.target.floor)}
+        </p>
+      </div>
+
+      {/* Main Instruction Card */}
+      <div className="rounded-xl bg-card p-3.5 text-card-foreground shadow space-y-2">
+        <div className="flex items-start gap-2.5">
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
+            <Footprints className="h-4 w-4" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold leading-snug">{currentInstruction}</p>
+            {nextInstruction && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                <span className="font-semibold">Next:</span> {nextInstruction}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Action buttons inside card */}
+        <div className="flex items-center justify-between pt-2 border-t text-xs">
+          <button
+            type="button"
+            onClick={p.onRepeat}
+            className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+            title="Repeat spoken instruction"
+            aria-label="Repeat spoken instruction"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Repeat
+          </button>
+          <button
+            type="button"
+            onClick={p.onToggleMute}
+            className="inline-flex items-center gap-1 font-semibold text-muted-foreground hover:text-foreground"
+            title={p.voiceMuted ? "Unmute spoken directions" : "Mute spoken directions"}
+            aria-label={p.voiceMuted ? "Unmute spoken directions" : "Mute spoken directions"}
+          >
+            {p.voiceMuted ? (
+              <>
+                <VolumeX className="h-3.5 w-3.5 text-destructive" /> Muted
+              </>
+            ) : (
+              <>
+                <Volume2 className="h-3.5 w-3.5 text-primary" /> Spoken on
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Stepping controls */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={p.onPrev}
+          disabled={p.currentStep === 0}
+          className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl border border-primary-foreground/30 bg-primary/20 py-2 text-xs font-bold disabled:opacity-30 hover:bg-primary/40 transition-colors"
+          aria-label="Previous navigation step"
+        >
+          <ChevronLeft className="h-4 w-4" /> Prev Step
+        </button>
+        <button
+          type="button"
+          onClick={p.onNext}
+          className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl bg-card text-card-foreground py-2 text-xs font-bold shadow hover:bg-card/90 transition-colors"
+          aria-label={isLast ? "Complete navigation" : "Next navigation step"}
+        >
+          {isLast ? (
+            <>
+              <CheckCircle2 className="h-4 w-4 text-success" /> Finish
+            </>
+          ) : (
+            <>
+              Next Step <ChevronRight className="h-4 w-4" />
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Simulated walk toggle & notes */}
+      <div className="flex items-center justify-between text-[11px] pt-1 opacity-90">
+        <button
+          type="button"
+          onClick={p.onToggleSim}
+          className="underline hover:opacity-100"
+          title="Toggle simulated positioning walk"
+        >
+          {p.simOn ? "Stop simulated walk" : "Preview with simulated walk"}
+        </button>
+        <button
+          type="button"
+          onClick={p.onShareRoute}
+          className="inline-flex items-center gap-1 hover:underline"
+        >
+          <Share2 className="h-3 w-3" /> Share
+        </button>
+      </div>
+      <p className="text-[10px] opacity-75">
+        Live positioning uses hardware device GPS when permitted. Simulated walk is a preview only.
+      </p>
+    </div>
+  );
 }
 
 // Strongly-typed SpeechRecognition interface to eliminate any errors

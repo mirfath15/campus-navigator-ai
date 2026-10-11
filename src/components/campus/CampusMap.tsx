@@ -124,6 +124,33 @@ export function CampusMap({ path, closed, position, realGpsPosition }: Props) {
       });
   }
 
+  function drawRealGps() {
+    const l = L.current, g = gps.current;
+    if (!l || !g) return;
+    g.clearLayers();
+    const gp = latest.current.realGpsPosition;
+    if (!gp) return;
+    // Blue indicator for real hardware GPS - distinct from simulated positioning
+    const gpsBlue = "#2563eb";
+    l.circle([gp.lat, gp.lng], {
+      radius: Math.max(gp.accuracy, 3),
+      color: gpsBlue,
+      fillColor: gpsBlue,
+      fillOpacity: 0.15,
+      weight: 1.5,
+      dashArray: "3 4",
+    }).addTo(g);
+    l.circleMarker([gp.lat, gp.lng], {
+      radius: 8,
+      color: "#ffffff",
+      fillColor: gpsBlue,
+      fillOpacity: 1,
+      weight: 2.5,
+    })
+      .addTo(g)
+      .bindTooltip(`📍 Real Device GPS (±${Math.round(gp.accuracy)}m)`, { permanent: false, direction: "top" });
+  }
+
   useEffect(() => {
     let cancelled = false;
     import("leaflet").then((mod) => {
@@ -175,3 +202,4 @@ export function CampusMap({ path, closed, position, realGpsPosition }: Props) {
 
   return <div ref={el} className="h-full w-full" />;
 }
+

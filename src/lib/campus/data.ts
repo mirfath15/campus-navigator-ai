@@ -644,6 +644,8 @@ const BUILDING_APPROACH_JUNCTIONS: Record<
 // 2. BUILDING ENTRANCES, FLOORS, CORRIDORS & ROOMS
 // ==========================================
 
+const usedRids = new Set<string>();
+
 for (const b of BUILDING_DEFS) {
   const approach = BUILDING_APPROACH_JUNCTIONS[b.id] ?? {
     jId: "hub",
