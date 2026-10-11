@@ -4,9 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ShareLocationDialog } from "@/components/campus/ShareLocationDialog";
 import { rooms } from "@/lib/campus/data";
 
-function renderGpsDialog(
-  overrides: Partial<ComponentProps<typeof ShareLocationDialog>> = {},
-) {
+function renderGpsDialog(overrides: Partial<ComponentProps<typeof ShareLocationDialog>> = {}) {
   return render(
     <ShareLocationDialog
       open
@@ -55,7 +53,9 @@ describe("ShareLocationDialog GPS consent", () => {
     fireEvent.click(screen.getByRole("button", { name: /request device gps location/i }));
 
     expect(await screen.findByText(/permission was denied/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /select campus destination instead/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /select campus destination instead/i }),
+    ).toBeInTheDocument();
   });
 
   it("shows selectable text when clipboard copy is unavailable", async () => {
@@ -74,5 +74,22 @@ describe("ShareLocationDialog GPS consent", () => {
     expect(await screen.findByText(/select and copy manually/i)).toBeInTheDocument();
     const fallback = document.querySelector("textarea");
     expect(fallback?.value).toContain(rooms[0]!.code);
+  });
+  it("renders with elevated z-[2000] layering to sit above Leaflet map overlays and controls", () => {
+    renderGpsDialog();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    // Verify dialog content contains the z-[2000] class
+    expect(dialog.className).toContain("z-[2000]");
+  });
+
+  it("handles Escape key to close the dialog", () => {
+    const onOpenChange = vi.fn();
+    renderGpsDialog({ onOpenChange });
+
+    const dialog = screen.getByRole("dialog");
+    fireEvent.keyDown(dialog, { key: "Escape", code: "Escape" });
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

@@ -29,7 +29,10 @@ export function isValidCoordinate(lat?: number | null, lng?: number | null): boo
 /**
  * Finds the nearest campus building or major landmark to a set of coordinates.
  */
-export function findNearestCampusPlace(lat: number, lng: number): {
+export function findNearestCampusPlace(
+  lat: number,
+  lng: number,
+): {
   name: string;
   distanceMeters: number;
   isCampus: boolean;
@@ -195,10 +198,7 @@ export function formatDestinationMessage(params: {
     );
   }
 
-  lines.push(
-    ``,
-    `_Search rooms & get walking directions at Campus Navigator AI (VEC)_`,
-  );
+  lines.push(``, `_Search rooms & get walking directions at Campus Navigator AI (VEC)_`);
 
   return lines.join("\n");
 }
@@ -242,12 +242,6 @@ export function formatRouteMessage(params: {
     lines.push(
       `🗺️ Outdoor walking directions (Google Maps): ${getGoogleMapsDirectionsUrl(originCoords.lat, originCoords.lng, destCoords.lat, destCoords.lng)}`,
       `🗺️ Outdoor walking directions (OpenStreetMap): ${getOpenStreetMapDirectionsUrl(originCoords.lat, originCoords.lng, destCoords.lat, destCoords.lng)}`,
-    );
-  } else if (destCoords && isValidCoordinate(destCoords.lat, destCoords.lng)) {
-    lines.push(
-      `📌 Destination coordinates: ${destCoords.lat.toFixed(6)}, ${destCoords.lng.toFixed(6)}`,
-      `🗺️ Destination map (Google Maps): ${getGoogleMapsPointUrl(destCoords.lat, destCoords.lng)}`,
-      `🗺️ Destination map (OpenStreetMap): ${getOpenStreetMapPointUrl(destCoords.lat, destCoords.lng)}`,
     );
   }
 

@@ -60,7 +60,9 @@ describe("Sharing Utilities", () => {
       expect(gUrl).toBe("https://www.google.com/maps?q=13.148828,80.192063");
 
       const osmUrl = getOpenStreetMapPointUrl(13.148828, 80.192063);
-      expect(osmUrl).toContain("https://www.openstreetmap.org/?mlat=13.148828&mlon=80.192063#map=18/13.148828/80.192063");
+      expect(osmUrl).toContain(
+        "https://www.openstreetmap.org/?mlat=13.148828&mlon=80.192063#map=18/13.148828/80.192063",
+      );
     });
 
     it("generates walking directions URLs with valid points", () => {
@@ -147,21 +149,6 @@ describe("Sharing Utilities", () => {
       expect(msg).toContain("From: Main Gate");
       expect(msg).not.toContain("https://www.google.com/maps/dir");
       expect(msg).not.toContain("openstreetmap.org/directions");
-    });
-
-    it("includes destination map link when origin coordinates are missing but destCoords is provided", () => {
-      const sampleRoom = rooms[0]!;
-      const msg = formatRouteMessage({
-        originLabel: "Main Gate",
-        destRoom: sampleRoom,
-        destCoords: { lat: 13.1486, lng: 80.1921 },
-        distanceMeters: 140,
-        etaMinutes: 2,
-      });
-      expect(msg).toContain("From: Main Gate");
-      expect(msg).toContain("Destination coordinates: 13.148600, 80.192100");
-      expect(msg).toContain("https://www.google.com/maps?q=13.148600,80.192100");
-      expect(msg).toContain("https://www.openstreetmap.org/?mlat=13.148600&mlon=80.192100");
     });
 
     it("omits map links when destination coordinates are unavailable", () => {

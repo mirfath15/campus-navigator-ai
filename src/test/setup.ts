@@ -18,3 +18,27 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => {},
   }),
 });
+
+Object.defineProperty(window, "speechSynthesis", {
+  writable: true,
+  value: {
+    speak: () => {},
+    cancel: () => {},
+    pause: () => {},
+    resume: () => {},
+    getVoices: () => [],
+  },
+});
+
+class MockSpeechSynthesisUtterance {
+  text: string;
+  rate = 1;
+  lang = "en";
+  constructor(text: string) {
+    this.text = text;
+  }
+}
+Object.defineProperty(window, "SpeechSynthesisUtterance", {
+  writable: true,
+  value: MockSpeechSynthesisUtterance,
+});
